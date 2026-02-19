@@ -23,7 +23,7 @@ export default function App() {
       setResult("");
 
       const res = await axios.post(
-        "http://localhost:5000/api/generate",
+        "https://ai-product-seo-toolkit.onrender.com/api/generate",
         form
       );
 
