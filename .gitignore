@@ -10,8 +10,6 @@ client/.env
 # NODE MODULES
 # ===============================
 node_modules/
-server/node_modules/
-client/node_modules/
 
 # ===============================
 # LOG FILES
@@ -27,12 +25,11 @@ yarn-error.log*
 # ===============================
 dist/
 build/
-client/dist/
 
 # ===============================
 # VITE
 # ===============================
-client/.vite/
+.vite/
 
 # ===============================
 # OS FILES
@@ -41,7 +38,7 @@ client/.vite/
 Thumbs.db
 
 # ===============================
-# IDE
+# IDE FILES
 # ===============================
 .vscode/
 .idea/
