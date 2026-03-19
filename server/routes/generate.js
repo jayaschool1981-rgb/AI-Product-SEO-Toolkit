@@ -1,11 +1,8 @@
-const express = require("express");
-const { GoogleGenerativeAI } = require("@google/generative-ai");
-const Product = require("../models/Product");
+import express from "express";
+import axios from "axios";
+import Product from "../models/Product.js";
 
 const router = express.Router();
-
-// Initialize Gemini
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 router.post("/", async (req, res) => {
   try {
@@ -43,14 +40,28 @@ SEO Keywords: ${keywords}
 `;
 
     // -----------------------------
-    // 3️⃣ Gemini AI Call
+    // 3️⃣ OpenRouter API Call
     // -----------------------------
-    const model = genAI.getGenerativeModel({
-      model: process.env.GEMINI_MODEL,
-    });
+    const response = await axios.post(
+      "https://openrouter.ai/api/v1/chat/completions",
+      {
+        model: "mistralai/mixtral-8x7b",
+        messages: [
+          {
+            role: "user",
+            content: prompt,
+          },
+        ],
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
-    const result = await model.generateContent(prompt);
-    const aiContent = result.response.text();
+    const aiContent = response.data.choices[0].message.content;
 
     // -----------------------------
     // 4️⃣ Save To MongoDB
@@ -66,13 +77,12 @@ SEO Keywords: ${keywords}
 
     return res.status(200).json({
       success: true,
-      source: "gemini",
+      source: "openrouter",
       data: aiContent,
     });
 
   } catch (error) {
-
-    console.log("🔥 Gemini Error:", error.message);
+    console.log("🔥 OpenRouter Error:", error.message);
 
     // -----------------------------
     // 🧠 SMART FALLBACK CONTENT
@@ -80,26 +90,26 @@ SEO Keywords: ${keywords}
     const fallbackContent = `
 ### 1. SEO Product Description
 Discover the ultimate ${req.body.name}, crafted for ${req.body.audience}. 
-This premium ${req.body.category} solution enhances your beauty routine with powerful natural ingredients. 
-Designed with a ${req.body.tone} tone, it deeply nourishes and revitalizes your skin for a radiant glow. 
-Perfect for modern consumers seeking ${req.body.keywords}, this product blends performance with purity.
+This premium ${req.body.category} solution enhances your experience with powerful features. 
+Designed with a ${req.body.tone} tone, it delivers exceptional results. 
+Perfect for users seeking ${req.body.keywords}, this product blends performance with quality.
 
 ### 2. SEO Titles
-• Premium ${req.body.name} for Radiant Results
-• Best ${req.body.category} for Modern Women
-• Natural ${req.body.name} – Chemical-Free Formula
-• Luxury ${req.body.category} Solution
-• Advanced Skincare for Glowing Skin
+• Premium ${req.body.name} for Best Results
+• Best ${req.body.category} for Modern Users
+• Top ${req.body.name} – High Performance
+• Advanced ${req.body.category} Solution
+• ${req.body.name} for Professionals
 
 ### 3. Meta Description
-Shop premium ${req.body.name} for glowing, healthy skin. Natural, effective & beautifully crafted.
+Buy ${req.body.name} for top performance and quality. Perfect for modern needs.
 
 ### 4. Hashtags
-#OrganicSkincare #GlowingSkin #CleanBeauty #LuxuryBeauty #NaturalCare
-#HealthySkin #BeautyEssentials #RadiantGlow #PremiumSkincare #SelfCare
+#BestProduct #TopQuality #TrendingNow #MustHave #Premium
+#SmartChoice #Innovation #ModernLife #HighPerformance #Value
 
 ### 5. Keywords
-${req.body.keywords}, organic beauty, skincare routine, radiant skin, premium moisturizer
+${req.body.keywords}, premium product, best quality, trending product
 `;
 
     return res.status(200).json({
@@ -110,4 +120,4 @@ ${req.body.keywords}, organic beauty, skincare routine, radiant skin, premium mo
   }
 });
 
-module.exports = router;
+export default router;
